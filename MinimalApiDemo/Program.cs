@@ -40,7 +40,7 @@ app.MapGet("/provider/{id}", async (
     .WithName("GetProviderById")
     .WithTags("Provider");
 
-app.MapGet("/provider", async (
+app.MapPost("/provider", async (
     MinimalContextDb context,
     Provider provider) =>
     {
@@ -52,16 +52,17 @@ app.MapGet("/provider", async (
 
         return result > 0
             //? Results.Created($"/provider/{provider.Id}", provider)
-            ? Results.CreatedAtRoute("GetProviderById", new { id = provider.Id}, provider)
+            ? Results.CreatedAtRoute("GetProviderById", new { id = provider.Id }, provider)
             : Results.BadRequest("There is a problem to save the provider");
-    }).ProducesValidationProblem()
+    })
+    .ProducesValidationProblem()
     .Produces<Provider>(StatusCodes.Status201Created)
     .Produces(StatusCodes.Status400BadRequest)
     .WithName("PostProvider")
     .WithTags("Provider");
 
 
-app.MapGet("/provider/{id}", async (
+app.MapPut("/provider/{id}", async (
     Guid id,
     MinimalContextDb context,
     Provider provider) =>
@@ -86,13 +87,12 @@ app.MapGet("/provider/{id}", async (
     .WithName("PutProvider")
     .WithTags("Provider");
 
-app.MapGet("/provider/{id}", async (
+app.MapDelete("/provider/{id}", async (
     Guid id,
-    MinimalContextDb context,
-    Provider provider) =>
+    MinimalContextDb context) =>
 {
-    var providerDB = await context.Providers.FindAsync(id);
-    if (providerDB == null) return Results.NotFound();
+    var provider = await context.Providers.FindAsync(id);
+    if (provider == null) return Results.NotFound();
 
     context.Providers.Remove(provider); ;
     var result = await context.SaveChangesAsync();
