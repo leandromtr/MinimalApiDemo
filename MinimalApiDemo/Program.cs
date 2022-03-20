@@ -86,4 +86,27 @@ app.MapGet("/provider/{id}", async (
     .WithName("PutProvider")
     .WithTags("Provider");
 
+app.MapGet("/provider/{id}", async (
+    Guid id,
+    MinimalContextDb context,
+    Provider provider) =>
+{
+    var providerDB = await context.Providers.FindAsync(id);
+    if (providerDB == null) return Results.NotFound();
+
+    context.Providers.Remove(provider); ;
+    var result = await context.SaveChangesAsync();
+
+    return result > 0
+        //? Results.Created($"/provider/{provider.Id}", provider)
+        ? Results.NoContent()
+        : Results.BadRequest("There is a problem to save the provider");
+
+}).ProducesValidationProblem()
+    .Produces<Provider>(StatusCodes.Status204NoContent)
+    .Produces(StatusCodes.Status400BadRequest)
+    .Produces(StatusCodes.Status404NotFound)
+    .WithName("DeleteProvider")
+    .WithTags("Provider");
+
 app.Run();
