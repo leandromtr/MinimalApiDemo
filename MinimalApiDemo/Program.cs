@@ -67,7 +67,9 @@ app.MapPut("/provider/{id}", async (
     MinimalContextDb context,
     Provider provider) =>
 {
-    var providerDB = await context.Providers.FindAsync(id);
+    var providerDB = await context.Providers.AsNoTracking<Provider>()
+                                            .FirstOrDefaultAsync(p => p.Id == id);
+
     if (providerDB == null) return Results.NotFound();
 
         if (!MiniValidator.TryValidate(provider, out var errors))
