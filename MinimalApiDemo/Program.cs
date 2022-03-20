@@ -54,10 +54,36 @@ app.MapGet("/provider", async (
             //? Results.Created($"/provider/{provider.Id}", provider)
             ? Results.CreatedAtRoute("GetProviderById", new { id = provider.Id}, provider)
             : Results.BadRequest("There is a problem to save the provider");
-    })
+    }).ProducesValidationProblem()
     .Produces<Provider>(StatusCodes.Status201Created)
     .Produces(StatusCodes.Status400BadRequest)
     .WithName("PostProvider")
+    .WithTags("Provider");
+
+
+app.MapGet("/provider/{id}", async (
+    Guid id,
+    MinimalContextDb context,
+    Provider provider) =>
+{
+    var providerDB = await context.Providers.FindAsync(id);
+    if (providerDB == null) return Results.NotFound();
+
+        if (!MiniValidator.TryValidate(provider, out var errors))
+        return Results.ValidationProblem(errors);
+
+    context.Providers.Update(provider); ;
+    var result = await context.SaveChangesAsync();
+
+    return result > 0
+        //? Results.Created($"/provider/{provider.Id}", provider)
+        ? Results.NoContent()
+        : Results.BadRequest("There is a problem to save the provider");
+
+}).ProducesValidationProblem()
+    .Produces<Provider>(StatusCodes.Status204NoContent)
+    .Produces(StatusCodes.Status400BadRequest)
+    .WithName("PutProvider")
     .WithTags("Provider");
 
 app.Run();
