@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using MinimalApiDemo.Data;
 using MinimalApiDemo.Models;
 using MiniValidation;
 using NetDevPack.Identity;
 using NetDevPack.Identity.Jwt;
+using NetDevPack.Identity.Model;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +33,86 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthConfiguration();
 app.UseHttpsRedirection();
+
+
+app.MapPost("/register", async (
+    SignInManager<IdentityUser> signInManager,
+    UserManager<IdentityUser> userManager,
+    IOptions<AppJwtSettings> appJwtSettings,
+    RegisterUser registerUser) =>
+    {
+        if (registerUser == null)
+            return Results.BadRequest("User not informed");
+
+        if (!MiniValidator.TryValidate(registerUser, out var errors))
+            return Results.ValidationProblem(errors);
+
+        var user = new IdentityUser
+        {
+            UserName = registerUser.Email,
+            Email = registerUser.Email,
+            EmailConfirmed = true
+        };
+
+        var result = await userManager.CreateAsync(user, registerUser.Password);
+
+        if (!result.Succeeded)
+            return Results.BadRequest(result.Errors);
+
+        var jwt = new JwtBuilder()
+            .WithUserManager(userManager)
+            .WithJwtSettings(appJwtSettings.Value)
+            .WithEmail(user.Email)
+            .WithJwtClaims()
+            .WithUserClaims()
+            .WithUserRoles()
+            .BuildToken();
+
+        return Results.Ok(jwt);
+    })
+    .ProducesValidationProblem()
+    .Produces<Provider>(StatusCodes.Status200OK)
+    .Produces(StatusCodes.Status400BadRequest)
+    .WithName("RegisterUser")
+    .WithTags("User"); 
+
+
+app.MapPost("/login", async (
+    SignInManager<IdentityUser> signInManager,
+    UserManager<IdentityUser> userManager,
+    IOptions<AppJwtSettings> appJwtSettings,
+    LoginUser loginUser) =>
+{
+    if (loginUser == null)
+        return Results.BadRequest("User not informed");
+
+    if (!MiniValidator.TryValidate(loginUser, out var errors))
+        return Results.ValidationProblem(errors);
+
+    var result = await signInManager.PasswordSignInAsync(loginUser.Email, loginUser.Password, true, true);
+
+    if (result.IsLockedOut)
+        return Results.BadRequest("The user is blocked");
+
+    if (!result.Succeeded)
+        return Results.BadRequest("User or Password invalid");
+
+    var jwt = new JwtBuilder()
+        .WithUserManager(userManager)
+        .WithJwtSettings(appJwtSettings.Value)
+        .WithEmail(loginUser.Email)
+        .WithJwtClaims()
+        .WithUserClaims()
+        .WithUserRoles()
+        .BuildToken();
+
+    return Results.Ok(jwt);
+})
+    .ProducesValidationProblem()
+    .Produces<Provider>(StatusCodes.Status200OK)
+    .Produces(StatusCodes.Status400BadRequest)
+    .WithName("LoginUser")
+    .WithTags("User"); ;
 
 
 app.MapGet("/provider", async (
@@ -82,7 +165,7 @@ app.MapPut("/provider/{id}", async (
 
     if (providerDB == null) return Results.NotFound();
 
-        if (!MiniValidator.TryValidate(provider, out var errors))
+    if (!MiniValidator.TryValidate(provider, out var errors))
         return Results.ValidationProblem(errors);
 
     context.Providers.Update(provider); ;
