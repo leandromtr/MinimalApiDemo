@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -23,6 +24,13 @@ builder.Services.AddIdentityEntityFrameworkContextConfiguration(options =>
 builder.Services.AddIdentityConfiguration();
 builder.Services.AddJwtConfiguration(builder.Configuration, "AppSettings");
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("DeleteProvider",
+        policy => policy.RequireClaim("DeleteProvider"));
+});
+
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -35,7 +43,7 @@ app.UseAuthConfiguration();
 app.UseHttpsRedirection();
 
 
-app.MapPost("/register", async (
+app.MapPost("/register", [AllowAnonymous] async (
     SignInManager<IdentityUser> signInManager,
     UserManager<IdentityUser> userManager,
     IOptions<AppJwtSettings> appJwtSettings,
@@ -77,7 +85,7 @@ app.MapPost("/register", async (
     .WithTags("User"); 
 
 
-app.MapPost("/login", async (
+app.MapPost("/login", [AllowAnonymous] async (
     SignInManager<IdentityUser> signInManager,
     UserManager<IdentityUser> userManager,
     IOptions<AppJwtSettings> appJwtSettings,
@@ -115,13 +123,13 @@ app.MapPost("/login", async (
     .WithTags("User"); ;
 
 
-app.MapGet("/provider", async (
+app.MapGet("/provider", [AllowAnonymous] async (
     MinimalContextDb context) =>
     await context.Providers.ToListAsync())
     .WithName("GetProvider")
     .WithTags("Provider");
 
-app.MapGet("/provider/{id}", async (
+app.MapGet("/provider/{id}", [AllowAnonymous] async (
     Guid id,
     MinimalContextDb context) =>
     await context.Providers.FindAsync(id)
@@ -133,7 +141,7 @@ app.MapGet("/provider/{id}", async (
     .WithName("GetProviderById")
     .WithTags("Provider");
 
-app.MapPost("/provider", async (
+app.MapPost("/provider", [Authorize] async (
     MinimalContextDb context,
     Provider provider) =>
     {
@@ -155,7 +163,7 @@ app.MapPost("/provider", async (
     .WithTags("Provider");
 
 
-app.MapPut("/provider/{id}", async (
+app.MapPut("/provider/{id}", [Authorize] async (
     Guid id,
     MinimalContextDb context,
     Provider provider) =>
@@ -182,7 +190,7 @@ app.MapPut("/provider/{id}", async (
     .WithName("PutProvider")
     .WithTags("Provider");
 
-app.MapDelete("/provider/{id}", async (
+app.MapDelete("/provider/{id}", [Authorize] async (
     Guid id,
     MinimalContextDb context) =>
 {
@@ -201,6 +209,7 @@ app.MapDelete("/provider/{id}", async (
     .Produces<Provider>(StatusCodes.Status204NoContent)
     .Produces(StatusCodes.Status400BadRequest)
     .Produces(StatusCodes.Status404NotFound)
+    .RequireAuthorization("DeleteProvider")
     .WithName("DeleteProvider")
     .WithTags("Provider");
 
