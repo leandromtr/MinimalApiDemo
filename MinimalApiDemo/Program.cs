@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 using MinimalApiDemo.Data;
 using MinimalApiDemo.Models;
 using MiniValidation;
@@ -11,8 +12,7 @@ using NetDevPack.Identity.Model;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+#region Configure Services
 
 builder.Services.AddDbContext<MinimalContextDb>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -30,8 +30,49 @@ builder.Services.AddAuthorization(options =>
         policy => policy.RequireClaim("DeleteProvider"));
 });
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Minimal API Example",
+        Description = "Developed by Eduardo Pires - Owner @ desenvolvedor.io and reproduced by Leandro Reis",
+        Contact = new OpenApiContact { Name = "Eduardo Pires", Email = "contato@eduardopires.net.br" },
+        License = new OpenApiLicense { Name = "MIT", Url = new Uri("https://opensource.org/licenses/MIT") }
+    });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "Insert the token JWT like this: Bearer {your token}",
+        Name = "Authorization",
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
 
 var app = builder.Build();
+
+#endregion
+
+#region Configure Pipeline
 
 if (app.Environment.IsDevelopment())
 {
@@ -41,6 +82,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthConfiguration();
 app.UseHttpsRedirection();
+
+
+#endregion
+
+#region Actions
 
 
 app.MapPost("/register", [AllowAnonymous] async (
@@ -213,4 +259,8 @@ app.MapDelete("/provider/{id}", [Authorize] async (
     .WithName("DeleteProvider")
     .WithTags("Provider");
 
+#endregion
+
+
 app.Run();
+
