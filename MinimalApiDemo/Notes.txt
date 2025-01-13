@@ -1,5 +1,0 @@
-﻿Project based at Intro to Minimal Api
-https://www.youtube.com/watch?v=aXayqUfSNvw
-
-Original Code - https://github.com/EduardoPires/Minimal-API/blob/main/Program.cs
-To validate Token - https://jwt.io/
