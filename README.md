@@ -1,4 +1,4 @@
-# MinimalApi
+# MinimalApi - Demo
 <ul>
 <li>
 <b>Description:</b> Example of a minimal API that contains CRUD, JWT authentication, validation and other best practices. 
