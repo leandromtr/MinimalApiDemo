@@ -15,4 +15,13 @@
 <li>
 <b>Nuget Packages:</b> EntityFrameworkCore, MiniValidation, NetDevPack, Swashbuckle.AspNetCore</a>  
 </li>
+<br/>
+<li>
+<b>Notes:</b>
+</li>
+<ul>
+<li>
+To validate the token, you must use <a href="https://www.youtube.com/watch?v=aXayqUfSNvw">Jwt.io</a>  
+</li>
+</ul>
 </ul>
