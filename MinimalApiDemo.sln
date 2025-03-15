@@ -5,6 +5,8 @@ VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinimalApiDemo", "MinimalApiDemo\MinimalApiDemo.csproj", "{E7E89D74-4565-4C68-A6D9-4C5A3BF3E134}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DishesAPI", "DishesAPI\DishesAPI.csproj", "{7506AF28-BBFA-914C-A5F7-0E4267008149}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{E7E89D74-4565-4C68-A6D9-4C5A3BF3E134}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7E89D74-4565-4C68-A6D9-4C5A3BF3E134}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7E89D74-4565-4C68-A6D9-4C5A3BF3E134}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7506AF28-BBFA-914C-A5F7-0E4267008149}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7506AF28-BBFA-914C-A5F7-0E4267008149}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7506AF28-BBFA-914C-A5F7-0E4267008149}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7506AF28-BBFA-914C-A5F7-0E4267008149}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
