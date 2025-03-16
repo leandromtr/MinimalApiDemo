@@ -21,6 +21,10 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 
+var dishesEndPoints = app.MapGroup("/dishes");
+var dishWithGuidIdEndPoints = dishesEndPoints.MapGroup("/{dishId:guid}");
+var ingredientsEndPoints = dishWithGuidIdEndPoints.MapGroup("/ingredients");
+
 //app.MapGet("/dishes", (DishesDbContext dishesDbContext) =>
 //{
 //    return dishesDbContext.Dishes;
@@ -41,7 +45,7 @@ app.MapGet("/dishes/{dishId:guid}", async Task<Results<NotFound, Ok<DishDto>>> (
         return TypedResults.NotFound();
     }
     return TypedResults.Ok(mapper.Map<DishDto>(dishEntity));
-});
+}).WithName("GetDish");
 
 app.MapGet("/dishes/{dishName}", async Task<Ok<DishDto>> (DishesDbContext dishesDbContext, IMapper mapper, string dishName) =>
 {
@@ -55,6 +59,63 @@ app.MapGet("/dishes/{dishId}/ingredients", async Task<Results<NotFound, Ok<IEnum
         .FirstOrDefaultAsync(d => d.Id == dishId))?.Ingredients));
 });
 
+
+//app.MapPost("/dishes", async Task<Created<DishDto>> (DishesDbContext dishesDbContext, IMapper mapper, DishForCreationDto dishForCreationDto, LinkGenerator linkGenerator, HttpContext httpContext) =>
+//{
+//    var dishEntitity = mapper.Map<Dish>(dishForCreationDto);
+//    dishesDbContext.Add(dishEntitity);
+//    await dishesDbContext.SaveChangesAsync();
+
+//    var dishToReturn = mapper.Map<DishDto>(dishEntitity);
+
+//    var linkToDish = linkGenerator.GetUriByName(
+//        httpContext,
+//        "GetDish", new { dishId = dishToReturn.Id });
+
+//    var dishReturn = mapper.Map<DishDto>(dishEntitity);
+
+//    return TypedResults.Created(linkToDish, dishToReturn);
+//});
+
+app.MapPost("/dishes", async Task<CreatedAtRoute<DishDto>> (DishesDbContext dishesDbContext, IMapper mapper, DishForCreationDto dishForCreationDto) =>
+{
+    var dishEntitity = mapper.Map<Dish>(dishForCreationDto);
+    dishesDbContext.Add(dishEntitity);
+    await dishesDbContext.SaveChangesAsync();
+
+    var dishToReturn = mapper.Map<DishDto>(dishEntitity);
+
+    return TypedResults.CreatedAtRoute(dishToReturn, "GetDish",  new { dishId = dishToReturn.Id });
+});
+
+app.MapPut("/dishes/{dishId:guid}", async Task<Results<NotFound, NoContent>> (DishesDbContext dishesDbContext, IMapper mapper, Guid dishId, DishForUpdateDto dishForUpdateDto) =>
+{
+    var dishEntitity = await dishesDbContext.Dishes.FirstOrDefaultAsync(d=> d.Id == dishId);
+    if (dishEntitity == null)
+    {
+        return TypedResults.NotFound();
+    }
+
+    mapper.Map(dishForUpdateDto, dishEntitity);
+    await dishesDbContext.SaveChangesAsync();
+
+    var dishToReturn = mapper.Map<DishDto>(dishEntitity);
+
+    return TypedResults.NoContent();
+});
+
+app.MapDelete("/dishes/{dishId:guid}", async Task<Results<NotFound, NoContent>> (DishesDbContext dishesDbContext, Guid dishId) =>
+{
+    var dishEntitity = await dishesDbContext.Dishes.FirstOrDefaultAsync(d => d.Id == dishId);
+    if (dishEntitity == null)
+    {
+        return TypedResults.NotFound();
+    }
+
+    dishesDbContext.Remove(dishEntitity);
+    await dishesDbContext.SaveChangesAsync();
+    return TypedResults.NoContent();
+});
 
 using (var serviceScope = app.Services.GetService<IServiceScopeFactory>().CreateScope())
 {
